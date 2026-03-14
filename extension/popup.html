@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Tab Summarizer</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>AI Tab Summarizer</h1>
+    </header>
+
+    <!-- Settings Section: API Key -->
+    <section id="settings-section" class="section">
+      <div class="input-group">
+        <label for="api-key">Gemini API Key</label>
+        <input type="password" id="api-key" placeholder="Enter your Gemini API Key" />
+        <button id="save-key-btn" class="btn secondary">Save Key</button>
+      </div>
+      <div id="api-key-status" class="status-message"></div>
+    </section>
+
+    <!-- Main Actions Section -->
+    <section id="main-actions" class="section">
+      <button id="summarize-current-btn" class="btn primary">Summarize Current Tab</button>
+      <button id="summarize-all-btn" class="btn primary">Summarize All Tabs</button>
+      <button id="select-tabs-mode-btn" class="btn secondary">Select Tabs</button>
+    </section>
+
+    <!-- Tab Selection Section (Hidden by default) -->
+    <section id="tab-selection-section" class="section hidden">
+      <h3>Select tabs to summarize</h3>
+      <div id="tab-list" class="tab-list">
+        <!-- Checkboxes for tabs will be dynamically inserted here -->
+      </div>
+      <button id="summarize-selected-btn" class="btn primary">Summarize Selected Tabs</button>
+      <button id="cancel-selection-btn" class="btn secondary">Cancel</button>
+    </section>
+
+    <!-- Ask Across Tabs Section -->
+    <section id="ask-section" class="section">
+      <div class="input-group">
+        <label for="ask-input">Ask a question about these tabs</label>
+        <textarea id="ask-input" rows="2" placeholder="e.g., What are the main arguments across these articles?"></textarea>
+        <button id="ask-btn" class="btn primary">Ask Question</button>
+      </div>
+    </section>
+
+    <!-- Results Section -->
+    <section id="results-section" class="section">
+      <div id="loading-indicator" class="hidden">
+        <div class="spinner"></div>
+        <span>Processing...</span>
+      </div>
+
+      <div id="error-message" class="error-message hidden"></div>
+
+      <div id="results-content" class="results-content">
+        <!-- Results will be dynamically inserted here -->
+      </div>
+
+      <div class="results-actions hidden" id="results-actions">
+          <button id="copy-summary-btn" class="btn secondary">Copy</button>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="utils.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
