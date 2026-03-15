@@ -7,17 +7,17 @@ const ui = {
   saveKeyBtn: document.getElementById('save-key-btn'),
   apiKeyStatus: document.getElementById('api-key-status'),
 
+  askLabel: document.getElementById('ask-label'),
+  askInput: document.getElementById('ask-input'),
+  askBtn: document.getElementById('ask-btn'),
+
   summarizeCurrentBtn: document.getElementById('summarize-current-btn'),
-  summarizeAllBtn: document.getElementById('summarize-all-btn'),
   selectTabsModeBtn: document.getElementById('select-tabs-mode-btn'),
 
   tabSelectionSection: document.getElementById('tab-selection-section'),
   tabList: document.getElementById('tab-list'),
-  summarizeSelectedBtn: document.getElementById('summarize-selected-btn'),
+  confirmSelectionBtn: document.getElementById('confirm-selection-btn'),
   cancelSelectionBtn: document.getElementById('cancel-selection-btn'),
-
-  askInput: document.getElementById('ask-input'),
-  askBtn: document.getElementById('ask-btn'),
 
   loadingIndicator: document.getElementById('loading-indicator'),
   errorMessage: document.getElementById('error-message'),
@@ -25,12 +25,15 @@ const ui = {
   resultsActions: document.getElementById('results-actions'),
   copySummaryBtn: document.getElementById('copy-summary-btn'),
 
-  mainActions: document.getElementById('main-actions')
+  mainActions: document.getElementById('main-actions'),
+  askSection: document.getElementById('ask-section')
 };
 
 // Global state
 let currentApiKey = '';
 let openTabs = [];
+let chatMode = 'current'; // 'current' or 'selected'
+let selectedTabsList = [];
 
 // Initialize extension
 document.addEventListener('DOMContentLoaded', async () => {
@@ -59,10 +62,9 @@ async function loadApiKey() {
 function setupEventListeners() {
   ui.saveKeyBtn.addEventListener('click', handleSaveApiKey);
   ui.summarizeCurrentBtn.addEventListener('click', handleSummarizeCurrentTab);
-  ui.summarizeAllBtn.addEventListener('click', handleSummarizeAllTabs);
   ui.selectTabsModeBtn.addEventListener('click', handleSelectTabsMode);
   ui.cancelSelectionBtn.addEventListener('click', handleCancelSelection);
-  ui.summarizeSelectedBtn.addEventListener('click', handleSummarizeSelectedTabs);
+  ui.confirmSelectionBtn.addEventListener('click', handleConfirmSelection);
   ui.askBtn.addEventListener('click', handleAskAcrossTabs);
   ui.copySummaryBtn.addEventListener('click', handleCopySummary);
 }
@@ -133,16 +135,16 @@ function showLoading(show) {
 
     // Disable buttons
     ui.summarizeCurrentBtn.disabled = true;
-    ui.summarizeAllBtn.disabled = true;
-    ui.summarizeSelectedBtn.disabled = true;
+    ui.selectTabsModeBtn.disabled = true;
+    ui.confirmSelectionBtn.disabled = true;
     ui.askBtn.disabled = true;
   } else {
     ui.loadingIndicator.classList.add('hidden');
 
     // Enable buttons
     ui.summarizeCurrentBtn.disabled = false;
-    ui.summarizeAllBtn.disabled = false;
-    ui.summarizeSelectedBtn.disabled = false;
+    ui.selectTabsModeBtn.disabled = false;
+    ui.confirmSelectionBtn.disabled = false;
     ui.askBtn.disabled = false;
   }
 }
@@ -214,30 +216,11 @@ ${cleanText}
 }
 
 /**
- * Summarize All Tabs
- */
-async function handleSummarizeAllTabs() {
-  if (!currentApiKey) {
-    showError('Please set your Gemini API key first.');
-    return;
-  }
-
-  showLoading(true);
-
-  try {
-    const tabs = await chrome.tabs.query({ currentWindow: true });
-    await processTabsForSummarization(tabs);
-  } catch (error) {
-    showError(error.message);
-    showLoading(false);
-  }
-}
-
-/**
  * Opens tab selection mode
  */
 async function handleSelectTabsMode() {
   ui.mainActions.classList.add('hidden');
+  ui.askSection.classList.add('hidden');
   ui.tabSelectionSection.classList.remove('hidden');
   ui.resultsContent.innerHTML = '';
   ui.resultsActions.classList.add('hidden');
@@ -284,10 +267,10 @@ async function handleSelectTabsMode() {
   });
 
   if (ui.tabList.innerHTML === '') {
-      ui.tabList.innerHTML = '<p>No summarizable tabs found.</p>';
-      ui.summarizeSelectedBtn.disabled = true;
+      ui.tabList.innerHTML = '<p>No chatable tabs found.</p>';
+      ui.confirmSelectionBtn.disabled = true;
   } else {
-      ui.summarizeSelectedBtn.disabled = false;
+      ui.confirmSelectionBtn.disabled = false;
   }
 }
 
@@ -297,17 +280,13 @@ async function handleSelectTabsMode() {
 function handleCancelSelection() {
   ui.tabSelectionSection.classList.add('hidden');
   ui.mainActions.classList.remove('hidden');
+  ui.askSection.classList.remove('hidden');
 }
 
 /**
- * Summarize Selected Tabs
+ * Confirms Selected Tabs for Chat
  */
-async function handleSummarizeSelectedTabs() {
-  if (!currentApiKey) {
-    showError('Please set your Gemini API key first.');
-    return;
-  }
-
+function handleConfirmSelection() {
   const checkboxes = ui.tabList.querySelectorAll('input[type="checkbox"]:checked');
 
   if (checkboxes.length === 0) {
@@ -316,76 +295,19 @@ async function handleSummarizeSelectedTabs() {
   }
 
   const selectedTabIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
-  const selectedTabs = openTabs.filter(tab => selectedTabIds.includes(tab.id));
+  selectedTabsList = openTabs.filter(tab => selectedTabIds.includes(tab.id));
+  chatMode = 'selected';
 
-  showLoading(true);
+  ui.askLabel.textContent = `Chat with ${selectedTabsList.length} selected tabs`;
+  ui.selectTabsModeBtn.textContent = 'Change Selected Tabs';
 
-  try {
-    await processTabsForSummarization(selectedTabs);
-  } catch (error) {
-    showError(error.message);
-    showLoading(false);
-  }
+  ui.tabSelectionSection.classList.add('hidden');
+  ui.mainActions.classList.remove('hidden');
+  ui.askSection.classList.remove('hidden');
 }
 
 /**
- * Shared logic to extract content from multiple tabs and send to Gemini
- */
-async function processTabsForSummarization(tabs) {
-  let combinedContent = "";
-  let processedCount = 0;
-
-  for (let i = 0; i < tabs.length; i++) {
-    const tab = tabs[i];
-    ui.loadingIndicator.querySelector('span').textContent = `Processing tab ${i + 1} of ${tabs.length}...`;
-
-    const data = await extractContentFromTab(tab);
-
-    if (data.success && data.content) {
-      processedCount++;
-      // Limit per-tab content to fit multiple in the context window
-      const maxPerTab = Math.floor(window.MAX_CHAR_LIMIT / tabs.length);
-      const cleanText = window.truncateText(data.content, maxPerTab);
-
-      combinedContent += `\n\nTAB ${processedCount} (Title: ${data.title}):\n${cleanText}`;
-    }
-  }
-
-  if (processedCount === 0) {
-    throw new Error('Could not extract content from any of the selected tabs.');
-  }
-
-  ui.loadingIndicator.querySelector('span').textContent = 'Generating summary...';
-
-  const prompt = `
-You are analyzing multiple webpages.
-
-Provide:
-
-1. Summary of each page
-2. Common themes
-3. Key differences
-4. Overall insights
-
-Content:
-${combinedContent}
-`;
-
-  const summaryText = await window.callGeminiAPI(currentApiKey, prompt);
-  const htmlResponse = window.formatResponseToHTML(summaryText);
-
-  showResults(htmlResponse);
-  showLoading(false);
-
-  // If we were in selection mode, go back to main actions but keep results
-  if (!ui.tabSelectionSection.classList.contains('hidden')) {
-    ui.tabSelectionSection.classList.add('hidden');
-    ui.mainActions.classList.remove('hidden');
-  }
-}
-
-/**
- * Ask Questions Across Tabs
+ * Ask Questions (Current Tab or Selected Tabs)
  */
 async function handleAskAcrossTabs() {
   if (!currentApiKey) {
@@ -402,8 +324,17 @@ async function handleAskAcrossTabs() {
   showLoading(true);
 
   try {
-    // We query all tabs by default for questions, or could use selected if we saved state
-    const tabs = await chrome.tabs.query({ currentWindow: true });
+    let tabs = [];
+    if (chatMode === 'current') {
+      const activeTabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (activeTabs.length > 0) {
+        tabs = [activeTabs[0]];
+      } else {
+        throw new Error('Could not find active tab.');
+      }
+    } else {
+      tabs = selectedTabsList;
+    }
 
     let combinedContent = "";
     let processedCount = 0;

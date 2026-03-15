@@ -4,10 +4,9 @@ AI Tab Summarizer is a Manifest V3 Chrome Extension that interfaces directly wit
 
 ## Features
 
-- **Summarize Current Tab:** Get a quick summary of the currently active tab.
-- **Summarize All Tabs:** Generate summaries for all open tabs in your current window.
-- **Select Tabs Mode:** Choose specific tabs to summarize from a list.
-- **Ask Across Tabs:** Ask questions about the content of multiple tabs to synthesize information.
+- **Chat with Current Tab:** The default state allows you to instantly ask questions and get answers based on the content of your currently active tab.
+- **Select Tabs to Chat With:** Choose specific tabs from your open windows to synthesize information and ask questions across multiple sources.
+- **Summarize Current Tab:** Get a quick, structured summary of the currently active tab with one click.
 - **Direct Client-Side Integration:** Communicates directly with the Google Gemini API from your browser.
 - **Privacy-Focused:** No intermediate servers are used; your API key and data are processed locally within the extension.
 
@@ -23,12 +22,11 @@ AI Tab Summarizer is a Manifest V3 Chrome Extension that interfaces directly wit
 
 1. Click on the AI Tab Summarizer icon in your Chrome toolbar.
 2. **Setup:** In the "Settings" section, enter your personal Google Gemini API Key and click "Save Key". Your key is stored locally in your browser.
-3. **Summarize:** Choose an action:
-   - Click **Summarize Current Tab** for the active page.
-   - Click **Summarize All Tabs** to process all open tabs.
-   - Click **Select Tabs** to pick which tabs you want to include, then click **Summarize Selected Tabs**.
-4. **Q&A:** Alternatively, use the "Ask a question about these tabs" input to query the contents of your open tabs.
-5. Results will appear in the panel below, and you can copy them using the "Copy" button.
+3. **Chat/Summarize:** Choose an action:
+   - **Chat with current tab:** Simply type your question in the input box and click "Ask Question".
+   - **Summarize Current Tab:** Click the button to get a quick summary of the active page.
+   - **Select Tabs to Chat With:** Click this to pick multiple tabs from a list. Confirm your selection, and then you can ask a question that synthesizes information across all selected tabs.
+4. Results will appear in the panel below, and you can easily copy them using the "Copy" button.
 
 ## Architecture
 

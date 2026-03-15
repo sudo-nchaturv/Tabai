@@ -21,30 +21,29 @@
       <div id="api-key-status" class="status-message"></div>
     </section>
 
+    <!-- Ask Section -->
+    <section id="ask-section" class="section">
+      <div class="input-group">
+        <label id="ask-label" for="ask-input">Chat with current tab</label>
+        <textarea id="ask-input" rows="2" placeholder="Ask a question about the content..."></textarea>
+        <button id="ask-btn" class="btn primary">Ask Question</button>
+      </div>
+    </section>
+
     <!-- Main Actions Section -->
     <section id="main-actions" class="section">
       <button id="summarize-current-btn" class="btn primary">Summarize Current Tab</button>
-      <button id="summarize-all-btn" class="btn primary">Summarize All Tabs</button>
-      <button id="select-tabs-mode-btn" class="btn secondary">Select Tabs</button>
+      <button id="select-tabs-mode-btn" class="btn secondary">Select Tabs to Chat With</button>
     </section>
 
     <!-- Tab Selection Section (Hidden by default) -->
     <section id="tab-selection-section" class="section hidden">
-      <h3>Select tabs to summarize</h3>
+      <h3>Select tabs to chat with</h3>
       <div id="tab-list" class="tab-list">
         <!-- Checkboxes for tabs will be dynamically inserted here -->
       </div>
-      <button id="summarize-selected-btn" class="btn primary">Summarize Selected Tabs</button>
+      <button id="confirm-selection-btn" class="btn primary">Confirm Selection</button>
       <button id="cancel-selection-btn" class="btn secondary">Cancel</button>
-    </section>
-
-    <!-- Ask Across Tabs Section -->
-    <section id="ask-section" class="section">
-      <div class="input-group">
-        <label for="ask-input">Ask a question about these tabs</label>
-        <textarea id="ask-input" rows="2" placeholder="e.g., What are the main arguments across these articles?"></textarea>
-        <button id="ask-btn" class="btn primary">Ask Question</button>
-      </div>
     </section>
 
     <!-- Results Section -->
